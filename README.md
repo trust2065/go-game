@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# 圍棋排譜工具 (The Go Game)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+這是一個專為 iPad 與網頁開發的高質感圍棋排譜工具，致力於提供最真實的數位棋具體驗。
 
-Currently, two official plugins are available:
+## 🌐 線上預覽 (Production URL)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**[https://go-game-57678.web.app](https://go-game-57678.web.app)**
 
-## React Compiler
+---
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 🚀 快速開始
 
-## Expanding the ESLint configuration
+請確保您的開發環境已安裝 [Node.js](https://nodejs.org/)。
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 1. 安裝依賴
+在專案根目錄執行：
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### 2. 啟動開發伺服器
+執行以下指令後，在瀏覽器打開 [http://localhost:5173](http://localhost:5173)：
+```bash
+npm run dev
 ```
+
+### 3. 建置生產版本
+若要部署或預覽生產版本：
+```bash
+npm run build
+npm run preview
+```
+
+---
+
+## ✨ 核心特色
+
+### 1. 極致視覺體驗 (Super Realistic Visuals)
+- **木紋棋盤**：採用高解析度榧木紋理，搭配 Canvas 繪製 0.5px 細緻網格線。
+- **質感棋子**：使用徑向漸層 (Radial Gradient) 模擬黑子的深邃與白子的珍珠光澤。
+- **立體感**：透過 CSS 陰影與 Canvas 渲染，營造棋盤厚度與棋子落下的沉穩感。
+
+### 2. 完整圍棋邏輯 (Go Logic Engine)
+- **自動提子**：內建 BFS/DFS 演算法，即時計算氣數並自動處理提子。
+- **打劫與禁著點**：精確判斷打劫狀態，並對禁著點提供視覺提示。
+- **吃子復活**：悔棋 (Undo) 時能精確還原被吃掉的棋子。
+
+### 3. 排譜與導航 (History & Playback)
+- **歷史堆疊**：支援無限次的 Undo/Redo。
+- **手數統計**：即時顯示目前總手數與黑白雙方提子數。
+
+### 4. iPad 優化 (Touch Optimization)
+- **防誤觸**：針對 iPad 觸控手勢進行優化。
+- **落子輔助**：解決手指遮擋問題，提供精確的落子體驗。
+
+---
+
+## 🛠 技術棧
+
+- **框架**: [React 19](https://react.dev/)
+- **建置工具**: [Vite](https://vitejs.dev/)
+- **語言**: [TypeScript](https://www.typescriptlang.org/)
+- **資料庫/部署**: [Firebase](https://firebase.google.com/)
+- **渲染**: HTML5 Canvas API
