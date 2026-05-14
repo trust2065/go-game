@@ -22,7 +22,7 @@ export interface GameState {
 
 const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initialHistory, initialGameId, initialTitle, onNewGame, onGameSaved }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
+
   // 使用統一的 history 陣列來管理所有狀態，方便實作 Undo / Redo
   const [history, setHistory] = useState<GameState[]>(initialHistory || [{
     board: Array(size).fill(null).map(() => Array(size).fill(0)),
@@ -93,7 +93,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
           gradient.addColorStop(0, '#555');
           gradient.addColorStop(1, '#000');
           ctx.fillStyle = gradient;
-          
+
           ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
           ctx.shadowBlur = 4;
           ctx.shadowOffsetX = 2;
@@ -103,7 +103,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
           gradient.addColorStop(0, '#fff');
           gradient.addColorStop(1, '#ddd');
           ctx.fillStyle = gradient;
-          
+
           ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
           ctx.shadowBlur = 4;
           ctx.shadowOffsetX = 2;
@@ -202,9 +202,10 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
     <div className="go-board-container">
       <div className="go-board-stats" style={{ width: `${boardSizePx}px` }}>
         <span>總手數: {step}</span>
+        {isSaving && <span className="go-board-status">儲存中...</span>}
         <span>黑提子: {blackCaptures} | 白提子: {whiteCaptures}</span>
       </div>
-      
+
       <canvas
         ref={canvasRef}
         width={boardSizePx}
@@ -212,7 +213,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
         onClick={handleCanvasClick}
         className="go-board-canvas"
       />
-      
+
       <div className="go-board-controls">
         <p>目前輪到: {currentPlayer === 1 ? '黑子' : '白子'}</p>
         <button className="go-board-btn" onClick={undo} disabled={step === 0}>← 後退</button>
@@ -220,7 +221,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
         <button className="go-board-btn primary" onClick={reset}>清空棋盤</button>
         {onNewGame && <button className="go-board-btn" onClick={onNewGame}>開新棋局</button>}
       </div>
-      
+
       {warning && <div className="go-board-warning">{warning}</div>}
     </div>
   );
