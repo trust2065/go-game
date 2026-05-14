@@ -7,13 +7,28 @@ interface GoBoardProps {
   boardSizePx?: number;
 }
 
+interface GameState {
+  board: Cell[][];
+  currentPlayer: Player;
+  blackCaptures: number; // 黑子提掉的白子數
+  whiteCaptures: number; // 白子提掉的黑子數
+}
+
 const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [board, setBoard] = useState<Cell[][]>(
-    Array(size).fill(null).map(() => Array(size).fill(0))
-  );
-  const [currentPlayer, setCurrentPlayer] = useState<Player>(1);
+  
+  // 使用統一的 history 陣列來管理所有狀態，方便實作 Undo / Redo
+  const [history, setHistory] = useState<GameState[]>([{
+    board: Array(size).fill(null).map(() => Array(size).fill(0)),
+    currentPlayer: 1,
+    blackCaptures: 0,
+    whiteCaptures: 0,
+  }]);
+  const [step, setStep] = useState<number>(0);
   const [warning, setWarning] = useState<string>('');
+
+  const currentState = history[step];
+  const { board, currentPlayer, blackCaptures, whiteCaptures } = currentState;
 
   const padding = 30;
   const gridWidth = boardSizePx - padding * 2;
@@ -28,10 +43,10 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
 
     ctx.clearRect(0, 0, boardSizePx, boardSizePx);
 
+    // 網格線
     ctx.beginPath();
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.lineWidth = 1;
-
     for (let i = 0; i < size; i++) {
       const pos = padding + i * cellSize;
       ctx.moveTo(pos, padding);
@@ -41,6 +56,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
     }
     ctx.stroke();
 
+    // 星位
     const starPoints = size === 19 ? [3, 9, 15] : (size === 13 ? [3, 6, 9] : (size === 9 ? [2, 4, 6] : []));
     ctx.fillStyle = '#000';
     for (const r of starPoints) {
@@ -51,6 +67,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
       }
     }
 
+    // 棋子
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         const cell = board[r][c];
@@ -105,12 +122,8 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
     if (col < 0 || col >= size || row < 0 || row >= size) return;
     if (board[row][col] !== 0) return;
 
-    // 應用吃子與禁著點邏輯
+    // 計算落子邏輯
     const { newBoard, capturedStones, isSuicide } = applyMove(board, row, col, currentPlayer);
-
-    if (capturedStones && capturedStones.length > 0) {
-      console.log(`[吃子] 玩家 ${currentPlayer} 提掉了 ${capturedStones.length} 顆棋子`, capturedStones);
-    }
 
     if (isSuicide) {
       console.warn(`[禁著點] 玩家 ${currentPlayer} 下在無氣的位置`);
@@ -120,12 +133,46 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
       setWarning('');
     }
 
-    setBoard(newBoard);
-    setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
+    // 計算新的提子數
+    const newBlackCaptures = blackCaptures + (currentPlayer === 1 ? capturedStones.length : 0);
+    const newWhiteCaptures = whiteCaptures + (currentPlayer === 2 ? capturedStones.length : 0);
+
+    // 建立新狀態
+    const nextState: GameState = {
+      board: newBoard,
+      currentPlayer: currentPlayer === 1 ? 2 : 1,
+      blackCaptures: newBlackCaptures,
+      whiteCaptures: newWhiteCaptures,
+    };
+
+    // 切斷未來的 history (如果我們先 Undo 再落子，未來的紀錄會被覆蓋)
+    const newHistory = history.slice(0, step + 1);
+    newHistory.push(nextState);
+
+    setHistory(newHistory);
+    setStep(newHistory.length - 1);
+  };
+
+  const undo = () => setStep(s => Math.max(0, s - 1));
+  const redo = () => setStep(s => Math.min(history.length - 1, s + 1));
+  const reset = () => {
+    setHistory([{
+      board: Array(size).fill(null).map(() => Array(size).fill(0)),
+      currentPlayer: 1,
+      blackCaptures: 0,
+      whiteCaptures: 0,
+    }]);
+    setStep(0);
+    setWarning('');
   };
 
   return (
     <div className="go-board-container">
+      <div className="go-board-stats" style={{ display: 'flex', justifyContent: 'space-between', width: `${boardSizePx}px`, marginBottom: '-10px', fontWeight: 'bold' }}>
+        <span>總手數: {step}</span>
+        <span>黑提子: {blackCaptures} | 白提子: {whiteCaptures}</span>
+      </div>
+      
       <canvas
         ref={canvasRef}
         width={boardSizePx}
@@ -133,16 +180,14 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
         onClick={handleCanvasClick}
         className="go-board-canvas"
       />
+      
       <div className="go-board-controls">
         <p>目前輪到: {currentPlayer === 1 ? '黑子' : '白子'}</p>
-        <button onClick={() => {
-          setBoard(Array(size).fill(null).map(() => Array(size).fill(0)));
-          setWarning('');
-          setCurrentPlayer(1);
-        }}>
-          清空棋盤
-        </button>
+        <button onClick={undo} disabled={step === 0}>← 後退</button>
+        <button onClick={redo} disabled={step === history.length - 1}>前進 →</button>
+        <button onClick={reset}>清空棋盤</button>
       </div>
+      
       {warning && <div className="go-board-warning" style={{ color: 'red', fontWeight: 'bold' }}>{warning}</div>}
     </div>
   );
