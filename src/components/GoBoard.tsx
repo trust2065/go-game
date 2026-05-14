@@ -34,6 +34,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
   const [isSaving, setIsSaving] = useState(false);
   const [step, setStep] = useState<number>(initialHistory ? initialHistory.length - 1 : 0);
   const [warning, setWarning] = useState<string>('');
+  const [isHandicapMode, setIsHandicapMode] = useState(false);
 
   const currentState = history[step];
   const { board, currentPlayer, blackCaptures, whiteCaptures } = currentState;
@@ -130,11 +131,14 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
     if (col < 0 || col >= size || row < 0 || row >= size) return;
     if (board[row][col] !== 0) return;
 
+    // 如果是讓子模式，強迫使用黑棋且不換手
+    const playerToUse = isHandicapMode ? 1 : currentPlayer;
+
     // 計算落子邏輯
-    const { newBoard, capturedStones, isSuicide } = applyMove(board, row, col, currentPlayer);
+    const { newBoard, capturedStones, isSuicide } = applyMove(board, row, col, playerToUse);
 
     if (isSuicide) {
-      console.warn(`[禁著點] 玩家 ${currentPlayer} 下在無氣的位置`);
+      console.warn(`[禁著點] 玩家 ${playerToUse} 下在無氣的位置`);
       setWarning('⚠️ 禁著點 (無氣)！為方便覆盤仍允許落子');
       setTimeout(() => setWarning(''), 3000);
     } else {
@@ -142,13 +146,13 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
     }
 
     // 計算新的提子數
-    const newBlackCaptures = blackCaptures + (currentPlayer === 1 ? capturedStones.length : 0);
-    const newWhiteCaptures = whiteCaptures + (currentPlayer === 2 ? capturedStones.length : 0);
+    const newBlackCaptures = blackCaptures + (playerToUse === 1 ? capturedStones.length : 0);
+    const newWhiteCaptures = whiteCaptures + (playerToUse === 2 ? capturedStones.length : 0);
 
     // 建立新狀態
     const nextState: GameState = {
       board: newBoard,
-      currentPlayer: currentPlayer === 1 ? 2 : 1,
+      currentPlayer: isHandicapMode ? 1 : (playerToUse === 1 ? 2 : 1),
       blackCaptures: newBlackCaptures,
       whiteCaptures: newWhiteCaptures,
     };
@@ -186,6 +190,24 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
   const undo = () => setStep(s => Math.max(0, s - 1));
   const redo = () => setStep(s => Math.min(history.length - 1, s + 1));
 
+  const toggleHandicap = () => {
+    if (isHandicapMode) {
+      // 結束讓子：切換到白棋開始
+      setIsHandicapMode(false);
+      const newHistory = [...history];
+      // 確保最後一個狀態是白棋開始
+      newHistory[step] = {
+        ...newHistory[step],
+        currentPlayer: 2
+      };
+      setHistory(newHistory);
+      autoSave(newHistory);
+    } else {
+      // 開始讓子
+      setIsHandicapMode(true);
+    }
+  };
+
 
   const reset = () => {
     if (window.confirm('確定要清空棋盤嗎？目前的進度將會遺失。')) {
@@ -198,6 +220,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
       setStep(0);
       setWarning('');
       setGameId(undefined); // Reset gameId when clearing board for a new game
+      setIsHandicapMode(false);
     }
   };
 
@@ -218,9 +241,14 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
       />
 
       <div className="go-board-controls">
-        <p>目前輪到: {currentPlayer === 1 ? '黑子' : '白子'}</p>
+        <p>目前輪到: {isHandicapMode ? '讓子中 (黑)' : (currentPlayer === 1 ? '黑子' : '白子')}</p>
         <button className="go-board-btn" onClick={undo} disabled={step === 0}>← 後退</button>
         <button className="go-board-btn" onClick={redo} disabled={step === history.length - 1}>前進 →</button>
+        {(step === 0 || isHandicapMode) && (
+          <button className={`go-board-btn ${isHandicapMode ? 'active' : ''}`} onClick={toggleHandicap}>
+            {isHandicapMode ? '結束讓子' : '讓子'}
+          </button>
+        )}
         <button className="go-board-btn primary" onClick={reset}>清空棋盤</button>
         {onNewGame && <button className="go-board-btn" onClick={onNewGame}>開新棋局</button>}
       </div>
