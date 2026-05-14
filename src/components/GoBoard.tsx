@@ -188,15 +188,17 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
 
 
   const reset = () => {
-    setHistory([{
-      board: Array(size).fill(null).map(() => Array(size).fill(0)),
-      currentPlayer: 1,
-      blackCaptures: 0,
-      whiteCaptures: 0,
-    }]);
-    setStep(0);
-    setWarning('');
-    setGameId(undefined); // Reset gameId when clearing board for a new game
+    if (window.confirm('確定要清空棋盤嗎？目前的進度將會遺失。')) {
+      setHistory([{
+        board: Array(size).fill(null).map(() => Array(size).fill(0)),
+        currentPlayer: 1,
+        blackCaptures: 0,
+        whiteCaptures: 0,
+      }]);
+      setStep(0);
+      setWarning('');
+      setGameId(undefined); // Reset gameId when clearing board for a new game
+    }
   };
 
   return (
