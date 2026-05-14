@@ -1,13 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
+import { applyMove, type Cell, type Player } from '../utils/goLogic';
 import './GoBoard.css';
 
-// 0: Empty, 1: Black, 2: White
-type Player = 1 | 2;
-type Cell = 0 | Player;
-
 interface GoBoardProps {
-  size?: number; // Board size, e.g., 19
-  boardSizePx?: number; // Visual size in pixels
+  size?: number;
+  boardSizePx?: number;
 }
 
 const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
@@ -16,38 +13,34 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
     Array(size).fill(null).map(() => Array(size).fill(0))
   );
   const [currentPlayer, setCurrentPlayer] = useState<Player>(1);
+  const [warning, setWarning] = useState<string>('');
 
-  const padding = 30; // Padding from edge of canvas to the outer lines
+  const padding = 30;
   const gridWidth = boardSizePx - padding * 2;
   const cellSize = gridWidth / (size - 1);
 
-  // Draw board and stones
+  // 繪製棋盤與棋子
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear canvas
     ctx.clearRect(0, 0, boardSizePx, boardSizePx);
 
-    // Draw grid lines
     ctx.beginPath();
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)'; // 0.5px line simulation
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.7)';
     ctx.lineWidth = 1;
 
     for (let i = 0; i < size; i++) {
       const pos = padding + i * cellSize;
-      // Vertical line
       ctx.moveTo(pos, padding);
       ctx.lineTo(pos, boardSizePx - padding);
-      // Horizontal line
       ctx.moveTo(padding, pos);
       ctx.lineTo(boardSizePx - padding, pos);
     }
     ctx.stroke();
 
-    // Draw star points (hoshi)
     const starPoints = size === 19 ? [3, 9, 15] : (size === 13 ? [3, 6, 9] : (size === 9 ? [2, 4, 6] : []));
     ctx.fillStyle = '#000';
     for (const r of starPoints) {
@@ -58,7 +51,6 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
       }
     }
 
-    // Draw stones
     for (let r = 0; r < size; r++) {
       for (let c = 0; c < size; c++) {
         const cell = board[r][c];
@@ -71,24 +63,22 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
 
-        if (cell === 1) { // Black
+        if (cell === 1) {
           const gradient = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, radius * 0.1, x, y, radius);
           gradient.addColorStop(0, '#555');
           gradient.addColorStop(1, '#000');
           ctx.fillStyle = gradient;
           
-          // Shadow
           ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
           ctx.shadowBlur = 4;
           ctx.shadowOffsetX = 2;
           ctx.shadowOffsetY = 2;
-        } else { // White
+        } else {
           const gradient = ctx.createRadialGradient(x - radius * 0.3, y - radius * 0.3, radius * 0.1, x, y, radius);
           gradient.addColorStop(0, '#fff');
           gradient.addColorStop(1, '#ddd');
           ctx.fillStyle = gradient;
           
-          // Shadow
           ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
           ctx.shadowBlur = 4;
           ctx.shadowOffsetX = 2;
@@ -96,12 +86,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
         }
 
         ctx.fill();
-        
-        // Reset shadow for next drawing
         ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.shadowOffsetX = 0;
-        ctx.shadowOffsetY = 0;
       }
     }
   }, [board, size, boardSizePx, cellSize]);
@@ -114,22 +99,28 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    // Convert pixel to grid coordinates
     const col = Math.round((x - padding) / cellSize);
     const row = Math.round((y - padding) / cellSize);
 
-    // Check bounds
     if (col < 0 || col >= size || row < 0 || row >= size) return;
-
-    // Check if cell is empty
     if (board[row][col] !== 0) return;
 
-    // Place stone
-    const newBoard = board.map(r => [...r]);
-    newBoard[row][col] = currentPlayer;
-    setBoard(newBoard);
+    // 應用吃子與禁著點邏輯
+    const { newBoard, capturedStones, isSuicide } = applyMove(board, row, col, currentPlayer);
 
-    // Toggle player
+    if (capturedStones && capturedStones.length > 0) {
+      console.log(`[吃子] 玩家 ${currentPlayer} 提掉了 ${capturedStones.length} 顆棋子`, capturedStones);
+    }
+
+    if (isSuicide) {
+      console.warn(`[禁著點] 玩家 ${currentPlayer} 下在無氣的位置`);
+      setWarning('⚠️ 禁著點 (無氣)！為方便覆盤仍允許落子');
+      setTimeout(() => setWarning(''), 3000);
+    } else {
+      setWarning('');
+    }
+
+    setBoard(newBoard);
     setCurrentPlayer(currentPlayer === 1 ? 2 : 1);
   };
 
@@ -143,11 +134,16 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
         className="go-board-canvas"
       />
       <div className="go-board-controls">
-        <p>Current Player: {currentPlayer === 1 ? 'Black' : 'White'}</p>
-        <button onClick={() => setBoard(Array(size).fill(null).map(() => Array(size).fill(0)))}>
-          Reset Board
+        <p>目前輪到: {currentPlayer === 1 ? '黑子' : '白子'}</p>
+        <button onClick={() => {
+          setBoard(Array(size).fill(null).map(() => Array(size).fill(0)));
+          setWarning('');
+          setCurrentPlayer(1);
+        }}>
+          清空棋盤
         </button>
       </div>
+      {warning && <div className="go-board-warning" style={{ color: 'red', fontWeight: 'bold' }}>{warning}</div>}
     </div>
   );
 };
