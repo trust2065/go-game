@@ -55,7 +55,7 @@ export const updateGameInFirebase = async (id: string, title: string, history: a
 
 export const fetchGamesFromFirebase = async () => {
   try {
-    const q = query(collection(db, 'go_games'), orderBy('createdAt', 'desc'));
+    const q = query(collection(db, 'go_games'), orderBy('updatedAt', 'desc'));
     const querySnapshot = await getDocs(q);
     return querySnapshot.docs.map(doc => {
       const data = doc.data();

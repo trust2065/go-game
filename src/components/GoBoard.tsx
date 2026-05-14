@@ -170,6 +170,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
       const finalTitle = initialTitle || new Date().toLocaleString('zh-TW');
       if (gameId) {
         await updateGameInFirebase(gameId, finalTitle, currentHistory);
+        onGameSaved?.();
       } else {
         const newId = await saveGameToFirebase(finalTitle, currentHistory);
         setGameId(newId);
