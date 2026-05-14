@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, collection, addDoc, getDocs, orderBy, query, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, orderBy, query, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 
 // 請替換成你自己的 Firebase 設定
 const firebaseConfig = {
@@ -25,10 +25,30 @@ export const saveGameToFirebase = async (title: string, history: any[]) => {
       title,
       history: serializedHistory,
       createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
     });
     return docRef.id;
   } catch (e) {
     console.error("Error adding document: ", e);
+    throw e;
+  }
+};
+
+export const updateGameInFirebase = async (id: string, title: string, history: any[]) => {
+  try {
+    const serializedHistory = history.map(state => ({
+      ...state,
+      board: JSON.stringify(state.board)
+    }));
+
+    const docRef = doc(db, 'go_games', id);
+    await updateDoc(docRef, {
+      title,
+      history: serializedHistory,
+      updatedAt: serverTimestamp(),
+    });
+  } catch (e) {
+    console.error("Error updating document: ", e);
     throw e;
   }
 };

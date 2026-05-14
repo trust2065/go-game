@@ -1,12 +1,16 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { applyMove, type Cell, type Player } from '../utils/goLogic';
 import './GoBoard.css';
-import { saveGameToFirebase } from '../utils/firebase';
+import { saveGameToFirebase, updateGameInFirebase } from '../utils/firebase';
 
 interface GoBoardProps {
   size?: number;
   boardSizePx?: number;
   initialHistory?: GameState[];
+  initialGameId?: string;
+  initialTitle?: string;
+  onNewGame?: () => void;
+  onGameSaved?: () => void;
 }
 
 export interface GameState {
@@ -16,7 +20,7 @@ export interface GameState {
   whiteCaptures: number; // 白子提掉的黑子數
 }
 
-const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initialHistory }) => {
+const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initialHistory, initialGameId, initialTitle, onNewGame, onGameSaved }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // 使用統一的 history 陣列來管理所有狀態，方便實作 Undo / Redo
@@ -26,7 +30,7 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
     blackCaptures: 0,
     whiteCaptures: 0,
   }]);
-  const [title, setTitle] = useState('');
+  const [gameId, setGameId] = useState<string | undefined>(initialGameId);
   const [isSaving, setIsSaving] = useState(false);
   const [step, setStep] = useState<number>(initialHistory ? initialHistory.length - 1 : 0);
   const [warning, setWarning] = useState<string>('');
@@ -155,10 +159,33 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
 
     setHistory(newHistory);
     setStep(newHistory.length - 1);
+
+    // 自動儲存
+    autoSave(newHistory);
+  };
+
+  const autoSave = async (currentHistory: GameState[]) => {
+    try {
+      setIsSaving(true);
+      const finalTitle = initialTitle || new Date().toLocaleString('zh-TW');
+      if (gameId) {
+        await updateGameInFirebase(gameId, finalTitle, currentHistory);
+      } else {
+        const newId = await saveGameToFirebase(finalTitle, currentHistory);
+        setGameId(newId);
+        onGameSaved?.();
+      }
+    } catch (error) {
+      console.error("Auto save failed:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const undo = () => setStep(s => Math.max(0, s - 1));
   const redo = () => setStep(s => Math.min(history.length - 1, s + 1));
+
+
   const reset = () => {
     setHistory([{
       board: Array(size).fill(null).map(() => Array(size).fill(0)),
@@ -168,29 +195,12 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
     }]);
     setStep(0);
     setWarning('');
-  };
-
-  const handleSave = async () => {
-    if (!title.trim()) {
-      alert("請輸入棋譜名稱");
-      return;
-    }
-    try {
-      setIsSaving(true);
-      await saveGameToFirebase(title, history.slice(0, step + 1));
-      alert("儲存成功！");
-      setTitle('');
-    } catch (error) {
-      alert("儲存失敗，請檢查 console");
-      console.error(error);
-    } finally {
-      setIsSaving(false);
-    }
+    setGameId(undefined); // Reset gameId when clearing board for a new game
   };
 
   return (
     <div className="go-board-container">
-      <div className="go-board-stats" style={{ display: 'flex', justifyContent: 'space-between', width: `${boardSizePx}px`, marginBottom: '-10px', fontWeight: 'bold' }}>
+      <div className="go-board-stats" style={{ width: `${boardSizePx}px` }}>
         <span>總手數: {step}</span>
         <span>黑提子: {blackCaptures} | 白提子: {whiteCaptures}</span>
       </div>
@@ -205,25 +215,13 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initial
       
       <div className="go-board-controls">
         <p>目前輪到: {currentPlayer === 1 ? '黑子' : '白子'}</p>
-        <button onClick={undo} disabled={step === 0}>← 後退</button>
-        <button onClick={redo} disabled={step === history.length - 1}>前進 →</button>
-        <button onClick={reset}>清空棋盤</button>
+        <button className="go-board-btn" onClick={undo} disabled={step === 0}>← 後退</button>
+        <button className="go-board-btn" onClick={redo} disabled={step === history.length - 1}>前進 →</button>
+        <button className="go-board-btn primary" onClick={reset}>清空棋盤</button>
+        {onNewGame && <button className="go-board-btn" onClick={onNewGame}>開新棋局</button>}
       </div>
       
-      <div className="go-board-save" style={{ marginTop: '10px' }}>
-        <input 
-          type="text" 
-          value={title} 
-          onChange={(e) => setTitle(e.target.value)} 
-          placeholder="輸入棋譜名稱" 
-          style={{ padding: '5px', marginRight: '5px' }}
-        />
-        <button onClick={handleSave} disabled={isSaving || step === 0}>
-          {isSaving ? '儲存中...' : '儲存棋譜'}
-        </button>
-      </div>
-      
-      {warning && <div className="go-board-warning" style={{ color: 'red', fontWeight: 'bold' }}>{warning}</div>}
+      {warning && <div className="go-board-warning">{warning}</div>}
     </div>
   );
 };

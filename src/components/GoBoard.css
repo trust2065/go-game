@@ -4,6 +4,7 @@
   align-items: center;
   gap: 20px;
   margin: 20px;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 .go-board-canvas {
@@ -24,30 +25,145 @@
   cursor: pointer;
 }
 
-.go-board-controls {
+.go-board-stats {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: -10px;
+  font-weight: bold;
+  color: #4a3b2c;
+  font-size: 1.1rem;
+  padding: 0 10px;
+}
+
+.go-board-controls, .go-board-save {
   display: flex;
   align-items: center;
-  gap: 16px;
-  font-family: system-ui, -apple-system, sans-serif;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .go-board-controls p {
   margin: 0;
   font-size: 1.2rem;
   font-weight: bold;
-  color: #333;
-}
-
-.go-board-controls button {
+  color: #4a3b2c;
+  background: rgba(255, 255, 255, 0.6);
   padding: 8px 16px;
-  font-size: 1rem;
-  cursor: pointer;
-  background-color: #f0f0f0;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+  border-radius: 20px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.go-board-controls button:hover {
-  background-color: #e0e0e0;
+.go-board-btn {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: #fdfdfd;
+  color: #333;
+  border: none;
+  border-radius: 24px;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.go-board-btn::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 24px;
+  border: 1px solid rgba(0,0,0,0.1);
+  pointer-events: none;
+}
+
+.go-board-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 10px rgba(0, 0, 0, 0.15),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 2px 4px rgba(255, 255, 255, 0.8);
+}
+
+.go-board-btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.go-board-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: #eaeaea;
+  color: #999;
+  transform: none;
+}
+
+/* 特定按鈕風格 - 類似黑子 */
+.go-board-btn.primary {
+  background: #2c2c2c;
+  color: #fff;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.2),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.go-board-btn.primary::before {
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.go-board-btn.primary:hover:not(:disabled) {
+  background: #1a1a1a;
+  box-shadow: 
+    0 6px 10px rgba(0, 0, 0, 0.25),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.go-board-btn.primary:disabled {
+  background: #555;
+  color: #aaa;
+  box-shadow: none;
+}
+
+.go-board-input {
+  padding: 10px 16px;
+  font-size: 1rem;
+  border: 2px solid #ddd;
+  border-radius: 20px;
+  outline: none;
+  background: #fff;
+  color: #333;
+  width: 200px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.go-board-input:focus {
+  border-color: #a3723a;
+  box-shadow: 0 0 0 3px rgba(163, 114, 58, 0.2), inset 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.go-board-warning {
+  color: #d32f2f;
+  background: #ffebee;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: 600;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
 }
