@@ -35,8 +35,25 @@ function App() {
   };
 
   return (
-    <div className="App" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f5f5f5', padding: '20px' }}>
-      <h1>圍棋排譜工具</h1>
+    <div className="App" style={{ 
+      minHeight: '100vh', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      alignItems: 'center', 
+      background: '#e8e2d6', /* 溫暖的底色 */
+      backgroundImage: 'radial-gradient(circle at center, #f5f0e6 0%, #e8e2d6 100%)',
+      padding: '40px 20px',
+      color: '#4a3b2c'
+    }}>
+      <h1 style={{ 
+        margin: '0 0 30px 0', 
+        fontSize: '2.5rem', 
+        fontWeight: '800', 
+        letterSpacing: '2px',
+        textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
+      }}>
+        圍棋排譜工具
+      </h1>
       <GoBoard 
         key={loadedGameId} 
         size={19} 

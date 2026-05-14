@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { fetchGamesFromFirebase, updateGameInFirebase } from '../utils/firebase';
 import type { GameState } from './GoBoard';
+import './GameList.css';
 
 interface GameRecord {
   id: string;
@@ -37,7 +38,14 @@ const GameList: React.FC<GameListProps> = ({ onSelectGame, onNewGame, onRename, 
   }, [refreshTrigger]);
 
   if (loading) {
-    return <div>載入棋譜中...</div>;
+    return (
+      <div className="game-list-container">
+        <div className="loading-state">
+          <div className="loading-spinner"></div>
+          載入棋譜中...
+        </div>
+      </div>
+    );
   }
 
   const handleRenameSubmit = async (game: GameRecord) => {
@@ -57,43 +65,57 @@ const GameList: React.FC<GameListProps> = ({ onSelectGame, onNewGame, onRename, 
   };
 
   return (
-    <div style={{ marginTop: '20px', padding: '10px', background: '#fff', borderRadius: '8px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)', width: '600px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-        <h3 style={{ margin: 0 }}>已儲存的棋譜</h3>
-        <button onClick={onNewGame} style={{ padding: '5px 10px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
-          開新棋局
+    <div className="game-list-container">
+      <div className="game-list-header">
+        <h3>已儲存的棋譜</h3>
+        <button onClick={onNewGame} className="btn-premium btn-accent">
+          <span>+</span> 開新棋局
         </button>
       </div>
       
       {games.length === 0 ? (
-        <div>目前沒有儲存的棋譜</div>
+        <div className="empty-state">目前沒有儲存的棋譜</div>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+        <ul className="game-list-ul">
           {games.map(game => (
-            <li key={game.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderBottom: '1px solid #eee' }}>
+            <li key={game.id} className="game-list-li">
               {editingId === game.id ? (
-                <div style={{ display: 'flex', gap: '5px', flex: 1, marginRight: '10px' }}>
+                <div className="game-edit-container">
                   <input 
                     type="text" 
                     value={editTitle} 
                     onChange={e => setEditTitle(e.target.value)} 
-                    style={{ flex: 1, padding: '5px' }}
+                    className="game-edit-input"
                     autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleRenameSubmit(game);
+                      if (e.key === 'Escape') setEditingId(null);
+                    }}
                   />
-                  <button onClick={() => handleRenameSubmit(game)}>儲存</button>
-                  <button onClick={() => setEditingId(null)}>取消</button>
+                  <button onClick={() => handleRenameSubmit(game)} className="btn-premium btn-black">儲存</button>
+                  <button onClick={() => setEditingId(null)} className="btn-premium btn-white">取消</button>
                 </div>
               ) : (
-                <span style={{ flex: 1 }}>{game.title || '未命名棋譜'}</span>
+                <span className="game-title">{game.title || '未命名棋譜'}</span>
               )}
               
               {editingId !== game.id && (
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  <button onClick={() => {
-                    setEditingId(game.id);
-                    setEditTitle(game.title || '');
-                  }}>改名</button>
-                  <button onClick={() => onSelectGame(game)}>載入</button>
+                <div className="game-list-actions">
+                  <button 
+                    onClick={() => {
+                      setEditingId(game.id);
+                      setEditTitle(game.title || '');
+                    }} 
+                    className="btn-premium btn-white"
+                  >
+                    改名
+                  </button>
+                  <button 
+                    onClick={() => onSelectGame(game)} 
+                    className="btn-premium btn-black"
+                  >
+                    載入
+                  </button>
                 </div>
               )}
             </li>

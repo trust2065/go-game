@@ -1,0 +1,202 @@
+.game-list-container {
+  margin-top: 30px;
+  padding: 24px;
+  background: #fdfaf6; /* 象牙白/宣紙色 */
+  border-radius: 16px;
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.05),
+    0 4px 10px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 600px;
+  border: 1px solid rgba(163, 114, 58, 0.1);
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+.game-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(163, 114, 58, 0.15);
+}
+
+.game-list-header h3 {
+  margin: 0;
+  color: #4a3b2c;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.game-list-ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.game-list-li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.game-list-li:hover {
+  transform: translateX(4px);
+  box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: rgba(163, 114, 58, 0.2);
+}
+
+.game-title {
+  flex: 1;
+  font-weight: 500;
+  color: #333;
+  font-size: 1.05rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.game-list-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* 統一按鈕風格 - 繼承 GoBoard 的靈感 */
+.btn-premium {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  border-radius: 24px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 白子風格按鈕 (預設/載入) */
+.btn-white {
+  background: #fdfdfd;
+  color: #333;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.1),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 2px 4px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.btn-white:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 10px rgba(0, 0, 0, 0.15),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.05),
+    inset 0 2px 4px rgba(255, 255, 255, 0.8);
+}
+
+/* 黑子風格按鈕 (主按鈕) */
+.btn-black {
+  background: #2c2c2c;
+  color: #fff;
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.2),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.btn-black:hover {
+  background: #1a1a1a;
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 10px rgba(0, 0, 0, 0.25),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.3),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+.btn-black:active {
+  transform: translateY(1px);
+}
+
+/* 木色風格按鈕 (新棋局) */
+.btn-accent {
+  background: #a3723a;
+  background-image: linear-gradient(135deg, #b58349 0%, #a3723a 100%);
+  color: white;
+  box-shadow: 
+    0 4px 6px rgba(163, 114, 58, 0.2),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.btn-accent:hover {
+  background: #8e6231;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(163, 114, 58, 0.3);
+}
+
+/* 編輯輸入框 */
+.game-edit-container {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  margin-right: 12px;
+}
+
+.game-edit-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 2px solid rgba(163, 114, 58, 0.2);
+  border-radius: 10px;
+  outline: none;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.game-edit-input:focus {
+  border-color: #a3723a;
+  box-shadow: 0 0 0 3px rgba(163, 114, 58, 0.1);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #8c7e6d;
+  font-style: italic;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 20px;
+  color: #a3723a;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(163, 114, 58, 0.2);
+  border-top: 3px solid #a3723a;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
