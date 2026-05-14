@@ -1,30 +1,34 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { applyMove, type Cell, type Player } from '../utils/goLogic';
 import './GoBoard.css';
+import { saveGameToFirebase } from '../utils/firebase';
 
 interface GoBoardProps {
   size?: number;
   boardSizePx?: number;
+  initialHistory?: GameState[];
 }
 
-interface GameState {
+export interface GameState {
   board: Cell[][];
   currentPlayer: Player;
   blackCaptures: number; // 黑子提掉的白子數
   whiteCaptures: number; // 白子提掉的黑子數
 }
 
-const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
+const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600, initialHistory }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
   // 使用統一的 history 陣列來管理所有狀態，方便實作 Undo / Redo
-  const [history, setHistory] = useState<GameState[]>([{
+  const [history, setHistory] = useState<GameState[]>(initialHistory || [{
     board: Array(size).fill(null).map(() => Array(size).fill(0)),
     currentPlayer: 1,
     blackCaptures: 0,
     whiteCaptures: 0,
   }]);
-  const [step, setStep] = useState<number>(0);
+  const [title, setTitle] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [step, setStep] = useState<number>(initialHistory ? initialHistory.length - 1 : 0);
   const [warning, setWarning] = useState<string>('');
 
   const currentState = history[step];
@@ -166,6 +170,24 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
     setWarning('');
   };
 
+  const handleSave = async () => {
+    if (!title.trim()) {
+      alert("請輸入棋譜名稱");
+      return;
+    }
+    try {
+      setIsSaving(true);
+      await saveGameToFirebase(title, history.slice(0, step + 1));
+      alert("儲存成功！");
+      setTitle('');
+    } catch (error) {
+      alert("儲存失敗，請檢查 console");
+      console.error(error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="go-board-container">
       <div className="go-board-stats" style={{ display: 'flex', justifyContent: 'space-between', width: `${boardSizePx}px`, marginBottom: '-10px', fontWeight: 'bold' }}>
@@ -186,6 +208,19 @@ const GoBoard: React.FC<GoBoardProps> = ({ size = 19, boardSizePx = 600 }) => {
         <button onClick={undo} disabled={step === 0}>← 後退</button>
         <button onClick={redo} disabled={step === history.length - 1}>前進 →</button>
         <button onClick={reset}>清空棋盤</button>
+      </div>
+      
+      <div className="go-board-save" style={{ marginTop: '10px' }}>
+        <input 
+          type="text" 
+          value={title} 
+          onChange={(e) => setTitle(e.target.value)} 
+          placeholder="輸入棋譜名稱" 
+          style={{ padding: '5px', marginRight: '5px' }}
+        />
+        <button onClick={handleSave} disabled={isSaving || step === 0}>
+          {isSaving ? '儲存中...' : '儲存棋譜'}
+        </button>
       </div>
       
       {warning && <div className="go-board-warning" style={{ color: 'red', fontWeight: 'bold' }}>{warning}</div>}
